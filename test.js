@@ -52,6 +52,28 @@ var updates = {
       "phone": "111222333" // Add this element
     },
     "company": "" // Remove this element because it is an empty string
+  },
+  "emptyString": "",
+  "null": null,
+  "undefined": undefined,
+  "inc": {
+    $op: 'inc',
+    value: 1
+  },
+  "decr": {
+    $op: 'inc',
+    value: -1
+  },
+  "setnx": {
+    $op: 'setnx',
+    value: 'test'
+  },
+  "del": {
+    $op: 'del'
+  },
+  "set": {
+    $op: 'set',
+    value: 'test'
   }
 };
 
@@ -79,7 +101,7 @@ describe('update expression', function () {
     var result = generator.getUpdateExpression(original, updates);
     console.log("Test Result", JSON.stringify(result, null, 4));
     test.should(result.UpdateExpression).be.equal(
-      'SET #lastName = :lastName, #phones = :phones, #family = :family, #profile.#business.#website = :profilebusinesswebsite, #profile.#business.#phone = :profilebusinessphone, #profile.#office = :profileoffice REMOVE #profile.#company'
+      'SET #lastName = :lastName, #phones = :phones, #family = :family, #profile.#business.#website = :profilebusinesswebsite, #profile.#business.#phone = :profilebusinessphone, #profile.#office = :profileoffice, #inc = #inc + :inc, #decr = #decr - :decr, #setnx = if_not_exists( #setnx, :setnx ), #set = :set REMOVE #profile.#company, #emptyString, #null, #undefined, #del'
     );
     test.should(result.ExpressionAttributeNames["#profile"])
       .be

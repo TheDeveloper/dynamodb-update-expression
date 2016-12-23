@@ -157,17 +157,49 @@ var updateExpressionGenerator = function (compareResult, options, path,
 
   var wholeList = filterOutDeleteFields(compareResult, null);
   wholeList.updateList.forEach(function (expr) {
+    var op, value = expr.value;
+    if (value && typeof value === 'object' && value.$op) {
+      op = value.$op;
+    }
+
     // change this logic to have # in front of .
     var propName = expr.name.replace(/&/g, "").replace(/_/g, "").replace(
       /\[/g, "").replace(/\]/g, "");
 
     var splittedByDotPropName = expr.name.split(".");
     var propNameExpressionName = "#" + splittedByDotPropName.join(".#");
+    var propNameExpressionValue = ":" + propName.replace(/\./g, "");
+    var expressionValueKey = propNameExpressionValue;
+
+    // setnx, set, setgt, setlt, inc, add, rem, del
+    if (op) {
+      switch(op) {
+      case 'set':
+        value = value.value;
+        break;
+      case 'setnx': case 'setlt': case 'setgt':
+        propNameExpressionValue = 'if_not_exists( ' + propNameExpressionName + ', ' + propNameExpressionValue + ' )';
+        value = value.value;
+        break;
+      case 'inc':
+        var sign = '+';
+        if (value.value < 0) sign = '-';
+        propNameExpressionValue = propNameExpressionName + ' ' + sign + ' ' + propNameExpressionValue;
+        value = Math.abs(value.value);
+        break;
+      case 'del':
+        wholeList.removeList.push(expr);
+        value = null;
+        return;
+      default:
+        throw new Error('unsupported op', op);
+      }
+    }
+
     splittedByDotPropName.forEach(function (partialName) {
       request.ExpressionAttributeNames["#" + partialName] =
         partialName;
     });
-    var propNameExpressionValue = ":" + propName.replace(/\./g, "");
 
     if (hasSetExpression)
     {
@@ -179,7 +211,7 @@ var updateExpressionGenerator = function (compareResult, options, path,
     }
 
 
-    request.ExpressionAttributeValues[propNameExpressionValue] = expr.value;
+    if (value !== null) request.ExpressionAttributeValues[expressionValueKey] = value;
   });
 
   wholeList.removeList.forEach(function (expr, index) {
