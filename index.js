@@ -116,18 +116,18 @@ var updateExpressionGenerator = function (compareResult, options, path,
 
     function traverse(o, p) {
       for (var i in o) {
-        p += (p ? '.' : '') + i;
+        var pi = (p ? p + '.' : '') + i;
         var value = o[i];
         if (value && typeof value === 'object' && !value.$op && !Array.isArray(value)) {
-          traverse(value, p);
+          traverse(value, pi);
         } else {
           if (value === null || value === undefined || value === '') {
             wholeList.removeList.push({
-              "name": p
+              "name": pi
             });
           } else {
             wholeList.updateList.push({
-              "name": p,
+              "name": pi,
               "value": value,
               "dataType": typeof value
             });

@@ -77,7 +77,9 @@ var updates = {
   },
   "deep": {
     "stuff": {
-      a: ""
+      a: "",
+      b: "fgh",
+      c: "fghgf"
     }
   }
 };
@@ -106,7 +108,7 @@ describe('update expression', function () {
     var result = generator.getUpdateExpression(original, updates);
     console.log("Test Result", JSON.stringify(result, null, 4));
     test.should(result.UpdateExpression).be.equal(
-      'SET #lastName = :lastName, #phones = :phones, #family = :family, #profile.#business.#website = :profilebusinesswebsite, #profile.#business.#phone = :profilebusinessphone, #profile.#office = :profileoffice, #inc = #inc + :inc, #decr = #decr - :decr, #setnx = if_not_exists( #setnx, :setnx ), #set = :set REMOVE #profile.#company, #emptyString, #null, #undefined, #deep.#stuff.#a, #del'
+      'SET #lastName = :lastName, #phones = :phones, #family = :family, #profile.#business.#website = :profilebusinesswebsite, #profile.#business.#phone = :profilebusinessphone, #profile.#office = :profileoffice, #inc = #inc + :inc, #decr = #decr - :decr, #setnx = if_not_exists( #setnx, :setnx ), #set = :set, #deep.#stuff.#b = :deepstuffb, #deep.#stuff.#c = :deepstuffc REMOVE #profile.#company, #emptyString, #null, #undefined, #deep.#stuff.#a, #del'
     );
     test.should(result.ExpressionAttributeNames["#profile"])
       .be
