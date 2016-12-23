@@ -113,6 +113,29 @@ var updateExpressionGenerator = function (compareResult, options, path,
       updateList: [],
       removeList: []
     };
+
+    function traverse(o, p) {
+      for (var i in o) {
+        p += (p ? '.' : '') + i;
+        var value = o[i];
+        if (value && typeof value === 'object' && !value.$op && !Array.isArray(value)) {
+          traverse(value, p);
+        } else {
+          if (value === null || value === undefined || value === '') {
+            wholeList.removeList.push({
+              "name": p
+            });
+          } else {
+            wholeList.updateList.push({
+              "name": p,
+              "value": value,
+              "dataType": typeof value
+            });
+          }
+        }
+      }
+    }
+
     var name;
     for(var i in obj) {
       // console.log(i + " = " + JSON.stringify(obj[i], null, 4) +
@@ -130,11 +153,18 @@ var updateExpressionGenerator = function (compareResult, options, path,
           obj[
             i].data) {
           //console.log("pushed => " + obj[i].dataType, (path ?  path + "." : "") +  i + " = " + obj[i].data);
-          wholeList.updateList.push({
-            "name": (path ? path + "." : "") + i,
-            "value": obj[i].data,
-            "dataType": obj[i].dataType
-          });
+          if (obj[i].dataType === 'object' && obj[i].data && !obj[i].data.$op) {
+            var partial = isNaN(parseInt(i, 10)) ? "." + i : "[" + i + "]";
+            name = path !== null ? path + partial : i;
+            // console.log("- nested object ->", name, obj[i].dataType);
+            traverse(obj[i].data, i);
+          } else {
+            wholeList.updateList.push({
+              "name": (path ? path + "." : "") + i,
+              "value": obj[i].data,
+              "dataType": obj[i].dataType
+            });
+          }
         } else if((obj[i].type === undefined && obj[i].data === undefined)) {
           var partial = isNaN(parseInt(i, 10)) ? "." + i : "[" + i + "]";
           name = path !== null ? path + partial : i;
@@ -255,7 +285,6 @@ var updateExpressionGenerator = function (compareResult, options, path,
 
   return request;
 };
-
 
 var removeExpressionGenerator = function (original, removes, compareResult,
   path, itemUniqueId) {
