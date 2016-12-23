@@ -126,12 +126,7 @@ var updateExpressionGenerator = function (compareResult, options, path,
 
       if(obj.hasOwnProperty(i) && typeof obj[i] === "object") {
 
-        if(obj[i].type === "updated" && (obj[i].data === "" || obj[i].data ===
-            undefined)) {
-          wholeList.removeList.push({
-            "name": (path ? path + "." : "") + i,
-          });
-        } else if((obj[i].type === "updated" || obj[i].type === "created") &&
+        if((obj[i].type === "updated" || obj[i].type === "created") &&
           obj[
             i].data) {
           //console.log("pushed => " + obj[i].dataType, (path ?  path + "." : "") +  i + " = " + obj[i].data);
@@ -140,16 +135,18 @@ var updateExpressionGenerator = function (compareResult, options, path,
             "value": obj[i].data,
             "dataType": obj[i].dataType
           });
-        } else
-        if((obj[i].type === undefined && obj[i].data === undefined) ||
-          (obj[i].type && obj[i].type !== "deleted" && obj[i].type !==
-            "unchanged")) {
+        } else if((obj[i].type === undefined && obj[i].data === undefined)) {
           var partial = isNaN(parseInt(i, 10)) ? "." + i : "[" + i + "]";
           name = path !== null ? path + partial : i;
           // console.log("- nested object ->", name, obj[i].dataType);
           var childList = filterOutDeleteFields(obj[i], name);
           wholeList.updateList = wholeList.updateList.concat(childList.updateList);
           wholeList.removeList = wholeList.removeList.concat(childList.removeList);
+        } else if(obj[i].data === "" || obj[i].data === undefined || obj[i].data === null
+      ) {
+          wholeList.removeList.push({
+            "name": (path ? path + "." : "") + i,
+          });
         }
       }
     }
